@@ -1,0 +1,70 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>IK Graphs!!</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="style.css">
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script src="http://visjs.org/dist/vis.js"></script>
+
+    </head>
+    <body>
+
+        <!-- Arm -->
+        <div>
+
+            <canvas id="canvas" width="400" height="300">
+                Your browser doesn't support html5 canvas :c.
+            </canvas>
+
+            <!-- Graph thingy -->
+            <span class="slider_row">
+                <label for="amount" class="ib">alpha</label>
+                <span id="ang1" class="ib slider"></span>
+                <input type="text" id="ang1val" class="slider_text">
+            </span>
+
+            <span class="slider_row">
+                <label for="amount" class="ib">beta</label>
+                <span id="ang2" class="ib slider"></span>
+                <input type="text" id="ang2val" class="slider_text">
+            </span>
+
+            <span class="slider_row">
+                <label for="amount" class="ib">l1</label>
+                <span id="l1" class="ib slider"></span>
+                <input type="text" id="l1val" class="slider_text">
+            </span>
+
+            <span class="slider_row">
+                <label for="amount" class="ib">l2</label>
+                <span id="l2" class="ib slider"></span>
+                <input type="text" id="l2val" class="slider_text">
+            </span>
+
+        </div>
+
+        <div id="mygraph"></div>
+
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">
+            You are using an <strong>outdated</strong> browser. Please
+            <a href="http://browsehappy.com/">upgrade your browser</a> to improve
+            your experience.
+            </p>
+        <![endif]-->
+
+        <script src="Global.js"></script>
+        <script src="Arm.js"></script>
+        <script src="Graph.js"></script>
+    </body>
+</html>

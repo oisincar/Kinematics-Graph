@@ -1,0 +1,17 @@
+/* Slider sheet */
+.slider_row {
+  display: block;
+  padding-bottom: 10px;
+}
+
+.ib {
+  display: inline-block;
+}
+
+.slider {
+  width:200px;
+}
+
+.slider_text {
+  border:0; color:#f6931f; font-weight:bold; display:inline-block;
+}
