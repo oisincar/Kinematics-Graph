@@ -7,6 +7,7 @@ $("#ang1").slider({
         $("#ang1val").val(ui.values[0] + "°");
         a = ui.values[0];
         UpdateArm();
+        UpdateGraph();
     }
 });
 $("#ang1val").val(a + "°");
@@ -19,6 +20,7 @@ $("#ang2").slider({
         $("#ang2val").val(ui.values[0] + "°");
         b = ui.values[0];
         UpdateArm();
+        UpdateGraph();
     }
 });
 $("#ang2val").val(b + "°");
@@ -27,6 +29,7 @@ $("#ang2val").val(b + "°");
 $("#l1").slider({
     min: 1,
     max: 10,
+    step: 0.1,
     values: [b],
     slide: function(event, ui) {
         $("#l1val").val(ui.values[0] + "m");
@@ -40,6 +43,7 @@ $("#l1val").val(l1 + "m");
 $("#l2").slider({
     min: 1,
     max: 10,
+    step: 0.1,
     values: [b],
     slide: function(event, ui) {
         $("#l2val").val(ui.values[0] + "m");
