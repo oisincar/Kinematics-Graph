@@ -76,7 +76,7 @@ function CanvasState(canvas) {
     this.height = canvas.height;
     this.ctx = canvas.getContext('2d');
 
-    this.sf = 10; // Scaling from 'units' to pixels.
+    this.sf = 12; // Scaling from 'units' to pixels.
 
     this.targetR = 10;
 
@@ -171,7 +171,7 @@ CanvasState.prototype.draw = function() {
         var y2 = y1 + l2 * Math.sin(aR + bR);
 
         ctx.lineTo(this.offX + x2*this.sf, this.offY + this.height - y2*this.sf);
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 7;
 
         ctx.stroke();
 
