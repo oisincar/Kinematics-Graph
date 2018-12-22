@@ -1,10 +1,10 @@
 // Segment lengths
 var l1 = 10;
-var l2 = 10;
+var l2 = 8;
 
 // Arm angles
-var a = 45;
-var b = 30;
+var a = 70;
+var b = -90;
 
 // Ball location
 var targetX = 10;

@@ -17,54 +17,51 @@
         <script src="http://visjs.org/dist/vis.js"></script>
 
     </head>
-    <body>
+    <body class="background_col">
 
-        <!-- Arm -->
-        <div>
+        <span class="align_all">
+            <!-- Arm and Sliders -->
+            <div>
 
-            <canvas id="canvas" width="400" height="300">
-                Your browser doesn't support html5 canvas :c.
-            </canvas>
+                <!-- Arm -->
+                <canvas id="canvas" class="light_border" width="400" height="300">
+                    Your browser doesn't support html5 canvas :c.
+                </canvas>
 
-            <!-- Graph thingy -->
-            <span class="slider_row">
-                <label for="amount" class="ib">alpha</label>
-                <span id="ang1" class="ib slider"></span>
-                <input type="text" id="ang1val" class="slider_text">
-            </span>
+                <!-- Sliders -->
+                <span class="slider_row">
+                    <span class="slider_label">Shoulder Angle</span>
+                    <span id="ang1" class="flat-slider"></span>
+                    <span type="text" id="ang1val" class="slider_text"></span>
+                </span>
 
-            <span class="slider_row">
-                <label for="amount" class="ib">beta</label>
-                <span id="ang2" class="ib slider"></span>
-                <input type="text" id="ang2val" class="slider_text">
-            </span>
+                <span class="slider_row">
+                    <span class="slider_label">Elbow Angle</span>
+                    <span id="ang2" class="flat-slider"></span>
+                    <span type="text" id="ang2val" class="slider_text"></span>
+                </span>
 
-            <span class="slider_row">
-                <label for="amount" class="ib">l1</label>
-                <span id="l1" class="ib slider"></span>
-                <input type="text" id="l1val" class="slider_text">
-            </span>
+                <span class="slider_row">
+                    <span class="slider_label">Upper Arm Len</span>
+                    <span id="l1" class="flat-slider"></span>
+                    <span type="text" id="l1val" class="slider_text"></span>
+                </span>
 
-            <span class="slider_row">
-                <label for="amount" class="ib">l2</label>
-                <span id="l2" class="ib slider"></span>
-                <input type="text" id="l2val" class="slider_text">
-            </span>
+                <span class="slider_row">
+                    <span class="slider_label">Forearm Len</span>
+                    <span id="l2" class="flat-slider"></span>
+                    <span type="text" id="l2val" class="slider_text"></span>
+                </span>
 
-        </div>
+            </div>
 
-        <div id="mygraph"></div>
+            <div id="mygraph"></div>
 
-        <!--[if lt IE 8]>
-            <p class="browserupgrade">
-            You are using an <strong>outdated</strong> browser. Please
-            <a href="http://browsehappy.com/">upgrade your browser</a> to improve
-            your experience.
-            </p>
-        <![endif]-->
+            <script src="Global.js"></script>
+            <script src="Arm.js"></script>
+            <script src="Graph.js"></script>
 
-        <script src="Global.js"></script>
-        <script src="Arm.js"></script>
-        <script src="Graph.js"></script>
+        </span>
+
     </body>
 </html>

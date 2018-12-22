@@ -1,58 +1,66 @@
+
+// colours
+var background_colour = "#e0dfd5";
+var arm_colour = "#457b9d";
+var ball_colour = "#ef6461";
+var ball_stroke_colour = "#ef6461";
+
 // slider
 $("#ang1").slider({
     min: 0,
     max: 180,
     values: [a],
     slide: function(event, ui) {
-        $("#ang1val").val(ui.values[0] + "°");
+        // $("#ang1val").val(ui.values[0] + "°");
+        $("#ang1val").text(ui.values[0] + "°")
         a = ui.values[0];
         UpdateArm();
         UpdateGraph();
     }
 });
-$("#ang1val").val(a + "°");
+$("#ang1val").text(a + "°");
 
 $("#ang2").slider({
     min: -160,
     max: 160,
     values: [b],
     slide: function(event, ui) {
-        $("#ang2val").val(ui.values[0] + "°");
+        $("#ang2val").text(ui.values[0] + "°");
         b = ui.values[0];
         UpdateArm();
         UpdateGraph();
     }
 });
-$("#ang2val").val(b + "°");
+$("#ang2val").text(b + "°");
 
 
 $("#l1").slider({
-    min: 1,
-    max: 10,
+    min: 0,
+    max: 15,
     step: 0.1,
-    values: [b],
+    values: [l1],
     slide: function(event, ui) {
-        $("#l1val").val(ui.values[0] + "m");
+        $("#l1val").text(ui.values[0] + "m");
         l1 = ui.values[0];
         UpdateArm();
         UpdateGraph();
     }
 });
-$("#l1val").val(l1 + "m");
+$("#l1val").text(l1 + "m");
 
 $("#l2").slider({
-    min: 1,
-    max: 10,
+    min: 0,
+    max: 15,
     step: 0.1,
-    values: [b],
+    values: [l2],
     slide: function(event, ui) {
-        $("#l2val").val(ui.values[0] + "m");
+        $("#l2val").text(ui.values[0] + "m");
         l2 = ui.values[0];
         UpdateArm();
         UpdateGraph();
     }
 });
-$("#l2val").val(l2 + "m");
+$("#l2val").text(l2 + "m");
 
 function dist(x1, y1, x2, y2) {
     return Math.sqrt(
@@ -129,17 +137,17 @@ CanvasState.prototype.draw = function() {
         var ctx = this.ctx;
 
         // Colour background!
-        ctx.fillStyle = 'grey';
+        ctx.fillStyle = background_colour;
         ctx.fillRect(0, 0, this.width, this.height);
 
         // Draw ball
         ctx.beginPath();
         ctx.arc(this.offX + targetX * this.sf,
                 this.offY + this.height - targetY*this.sf, this.targetR, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'green';
+        ctx.fillStyle = ball_colour;
         ctx.fill();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = '#003300';
+        ctx.strokeStyle = ball_stroke_colour;
         ctx.stroke();
 
         // Draw arm
@@ -155,6 +163,7 @@ CanvasState.prototype.draw = function() {
         var aR = deg2rad * a, bR = deg2rad * b;
         var x1 = l1 * Math.cos(aR);
         var y1 = l1 * Math.sin(aR);
+        ctx.strokeStyle = arm_colour;
         ctx.moveTo(this.offX, this.offY + this.height);
         ctx.lineTo(this.offX + x1*this.sf, this.offY + this.height - y1*this.sf);
 

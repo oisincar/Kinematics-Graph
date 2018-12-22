@@ -1,12 +1,8 @@
 
 var graph = null;
 
-function custom(x, y) {
-    return (Math.sin(x * deg2rad) * Math.cos(y * deg2rad) * 50 + 50);
-}
-
 // Distance to the goal with angles a and b.
-function distance(a, b) {
+function distToTarget(a, b) {
     a *= deg2rad;
     b *= deg2rad;
 
@@ -33,7 +29,7 @@ function genData() {
         for (var j = 0; j < steps; j++) {
             // Centered around the current alpha and beta
             var x = i/steps * 360 - 180 + a, y = j*1.0/steps * 360 - 180 + b;
-            var value = distance(x, y);
+            var value = distToTarget(x, y);
             data.add({
                 x: x,
                 y: y,
@@ -50,18 +46,42 @@ function drawVisualization() {
     // specify options
     var options = {
         width: '600px',
-        height: '600px',
-        xLabel: 'Alpha',
-        yLabel: 'Beta',
-        zLabel: 'Distance',
-        legendLabel: 'Distance to Ball',
+        height: '500px',
+        xLabel: 'Shoulder',
+        yLabel: 'Elbow',
+        zLabel: 'Dist to Ball',
+        legendLabel: 'Dist',
         style: 'surface',
-        showPerspective: true,
+        cameraPosition: {horizontal: 1.0, vertical: 1.0, distance: 1.7},
+        // showPerspective: true,
+        showPerspective: false,
         showGrid: true,
         showLegend: true,
         showShadow: false,
         keepAspectRatio: true,
-        verticalRatio: 0.5
+        verticalRatio: 0.2,
+
+        axisColor: '#e8e9eb',
+
+        tooltip: function (point) {
+          // parameter point contains properties x, y, z
+            return '<div>Shoulder Angle: <b>' + Math.round(point.x) + '°</b></div>'
+                + '<div>Elbow Angle: <b>' + Math.round(point.y) + '°</b></div>'
+                + '<div>Distance to Ball: <b>' + point.z.toFixed(1) + 'm</b></div>';
+        },
+
+        xValueLabel: function(value) {
+            return value + '°';
+        },
+
+        yValueLabel: function(value) {
+            return value + '°';
+        },
+
+        zValueLabel: function(value) {
+            return value + 'm';
+        },
+        showZAxis: false,
     };
 
     // create a graph3d
