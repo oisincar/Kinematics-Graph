@@ -4,6 +4,7 @@ var background_colour = "#e0dfd5";
 var arm_colour = "#457b9d";
 var ball_colour = "#ef6461";
 var ball_stroke_colour = "#ef6461";
+var light_line_colour = "#cac8b8";
 
 // slider
 $("#ang1").slider({
@@ -139,6 +140,32 @@ CanvasState.prototype.draw = function() {
         // Colour background!
         ctx.fillStyle = background_colour;
         ctx.fillRect(0, 0, this.width, this.height);
+
+
+        // Draw grid!
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = light_line_colour;
+
+        // First lines are here.
+        var ox = this.offX % this.sf - this.sf;
+        var oy = this.offY % this.sf;
+
+        while (ox < this.width) {
+            ox += this.sf;
+
+            ctx.moveTo(ox, 0);
+            ctx.lineTo(ox, this.height);
+        }
+        while (oy < this.height) {
+            oy += this.sf;
+
+            ctx.moveTo(0,          oy);
+            ctx.lineTo(this.width, oy);
+        }
+
+        ctx.stroke();
+
 
         // Draw ball
         ctx.beginPath();
