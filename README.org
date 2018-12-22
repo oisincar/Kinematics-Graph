@@ -1,7 +1,5 @@
-#+TITLE: IK Site
+#+TITLE: :muscle:
 
 A lil site exploring kinematics in an arm. Graphing the distance vs joint angles.
 
-Just... Go here.
-
-http://oisincar.netsoc.ie/%f0%9f%92%aa/
+It's kinda hard to explain... Just go check it out [[http://oisincar.netsoc.ie/%f0%9f%92%aa/][HERE]]!
