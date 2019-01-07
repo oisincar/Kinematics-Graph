@@ -58,6 +58,7 @@ class ArmCanvas {
             this.styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10)  || 0;
             this.styleBorderTop   = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)   || 0;
         }
+
         // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
         // They will mess up mouse coordinates and this fixes that
         var html = document.body.parentNode;
