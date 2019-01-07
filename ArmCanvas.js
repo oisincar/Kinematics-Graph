@@ -7,29 +7,27 @@ var light_line_colour = "#cac8b8";
 
 class ArmCanvas {
 
+    getAngle(ix) { return Math.round(this._angles[ix] * rad2deg); }
     setAngle(ix, degrees) {
         this._angles[ix] = degrees * deg2rad;
-        this.valid = false;
-    }
-    getAngle(ix) {
-        return this._angles[ix];
+        this._valid = false;
     }
 
+    getLength(ix) { return this._lengths[ix]; }
     setLength(ix, len) {
         this._lengths[ix] = len;
-        this.valid = false;
-    }
-    getLength(ix) {
-        return this._lengths[ix];
+        this._valid = false;
     }
 
-    constructor(canvas, num_segments) {
+    constructor(canvas, ballmove_callback, num_segments) {
         // **** First some setup! ****
 
         this.canvas = canvas;
         this.width = canvas.width;
         this.height = canvas.height;
         this.ctx = canvas.getContext('2d');
+
+        this.ballmove_callback = ballmove_callback;
 
         this.num_segments = num_segments;
 
@@ -40,6 +38,9 @@ class ArmCanvas {
         // Graphical offsets
         this.offX = 200;
         this.offY = -50;
+
+        this.targetX = 10;
+        this.targetY = 10;
 
         // Create default angles/ lengths
         var stAng = 80; var incAng = ((-60) - stAng) / (num_segments-1);
@@ -77,11 +78,13 @@ class ArmCanvas {
             if (isClicked) {
                 var mouse = myState.getMouse(e);
 
-                targetX = (mouse.x                  - myState.offX) / myState.sf;
-                targetY = (myState.height - mouse.y + myState.offY) / myState.sf;
+                myState.targetX = (mouse.x                  - myState.offX) / myState.sf;
+                myState.targetY = (myState.height - mouse.y + myState.offY) / myState.sf;
 
-                UpdateGraph();
-                myState.valid = false;
+                // Update the graph/ whatever else should the ball move.
+                ballmove_callback();
+
+                myState._valid = false;
             }
         }, true);
 
@@ -97,7 +100,7 @@ class ArmCanvas {
     // It only ever does something if the canvas gets invalidated by our code
     draw() {
         // if our state is invalid, redraw and validate!
-        if (!this.valid) {
+        if (!this._valid) {
             var ctx = this.ctx;
 
             // Colour background!
@@ -130,8 +133,8 @@ class ArmCanvas {
 
             // Draw ball
             ctx.beginPath();
-            ctx.arc(this.offX + targetX * this.sf,
-                    this.offY + this.height - targetY*this.sf, this.targetR, 0, 2 * Math.PI, false);
+            ctx.arc(this.offX + this.targetX * this.sf,
+                    this.offY + this.height - this.targetY*this.sf, this.targetR, 0, 2 * Math.PI, false);
             ctx.fillStyle = ball_colour;
             ctx.fill();
             ctx.lineWidth = 2;
@@ -188,7 +191,7 @@ class ArmCanvas {
 
             // ctx.stroke();
 
-            this.valid = true;
+            this._valid = true;
         }
     }
 
