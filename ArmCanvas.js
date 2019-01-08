@@ -97,11 +97,56 @@ class ArmCanvas {
         setInterval(function() { myState.draw(); }, myState.interval);
     }
 
+
+    // Return tuples of (x, y) at the end of each limb.
+    calculatePositions(angles, lengths) {
+        // Arm
+        var curX = 0,
+            curY = 0,
+            curA = 0;
+
+        var res = [];
+
+        // Calculating end positions for each segment of the arm, and drawing to there.
+        for (var i = 0; i < this.num_segments; i++) {
+            var l = lengths[i],
+
+            curA = curA + angles[i],
+            curX = curX + l * Math.cos(curA),
+            curY = curY + l * Math.sin(curA);
+
+            res.push([curX, curY]);
+        }
+
+        return res;
+    }
+
+    calculateGradients(angles, lengths) {
+
+        // curX = l0*cos(a0) + l1*cos(a0+a1) + l2*cos(a0+a1+a2)...
+        // curY = l0*sin(a0) + l1*sin(a0+a1) + l2*sin(a0+a1+a2)...
+        // err = (curX - tX)^2 + (curY - tY)^2
+        // d/da (x*cos(a) + y*cos(a + b) + z*cos(a + b + c) + w*cos(a+b+c+d) - i)^2 + (x*sin(a) + y*sin(a+b) + z*sin(a+b+c) +w*sin(a+b+c+d)- j)^2
+        // 
+        
+        // d/da = 
+        //    +2i * ( w sin(a + b + c + d)
+        //          + z sin(a + b + c)
+        //          + y sin(a + b)
+        //          + x sin(a))
+        //    -2j * ( w cos(a + b + c + d)
+        //          + z cos(a + b + c)
+        //          + y cos(a + b)
+        //          + x cos(a))
+    }
+
     // While draw is called as often as the INTERVAL variable demands,
     // It only ever does something if the canvas gets invalidated by our code
     draw() {
         // if our state is invalid, redraw and validate!
         if (!this._valid) {
+            this._valid = true;
+
             var ctx = this.ctx;
 
             // Colour background!
@@ -150,49 +195,19 @@ class ArmCanvas {
             ctx.moveTo(this.offX - w, this.offY + this.height);
             ctx.lineTo(this.offX + w, this.offY + this.height);
 
-            // Arm
-            var curX = 0,
-                curY = 0,
-                curA = 0;
 
+            // Arm
             ctx.lineWidth = 7;
             ctx.strokeStyle = arm_colour;
             ctx.moveTo(this.offX, this.offY + this.height);
 
-            // Calculating end positions for each segment of the arm, and drawing to there.
-            for (var i = 0; i < this.num_segments; i++) {
-                var l = this._lengths[i],
-                    a = curA + this._angles[i],
-                    endX = curX + l * Math.cos(a),
-                    endY = curY + l * Math.sin(a);
-
-                ctx.lineTo(this.offX + endX*this.sf, this.offY + this.height - endY*this.sf);
-
-                curX = endX;
-                curY = endY;
-                curA = a;
-            }
+            self = this;
+            this.calculatePositions(this._angles, this._lengths).forEach(function(pos) {
+                ctx.lineTo(self.offX + pos[0]*self.sf,
+                           self.offY + self.height - pos[1]*self.sf);
+            })
 
             ctx.stroke();
-
-
-            // // End point of first arm
-            // var aR = deg2rad * a, bR = deg2rad * b;
-            // var x1 = l1 * Math.cos(aR);
-            // var y1 = l1 * Math.sin(aR);
-            // ctx.strokeStyle = arm_colour;
-            // ctx.moveTo(this.offX, this.offY + this.height);
-            // ctx.lineTo(this.offX + x1*this.sf, this.offY + this.height - y1*this.sf);
-
-            // var x2 = x1 + l2 * Math.cos(aR + bR);
-            // var y2 = y1 + l2 * Math.sin(aR + bR);
-
-            // ctx.lineTo(this.offX + x2*this.sf, this.offY + this.height - y2*this.sf);
-            // ctx.lineWidth = 7;
-
-            // ctx.stroke();
-
-            this._valid = true;
         }
     }
 
