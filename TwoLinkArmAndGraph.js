@@ -15,6 +15,10 @@ class TwoLinkArmAndGraph {
 
         // Create an arm in that space
         var armC = new ArmCanvas(document.getElementById('canvas'), UpdateGraph);
+        armC.targetX = 27;
+        armC.targetY = 13;
+
+
         var arm = new Arm(2);
         armC.addArm(arm);
 
