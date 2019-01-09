@@ -5,28 +5,14 @@ var ball_colour = "#ef6461";
 var ball_stroke_colour = "#ef6461";
 var light_line_colour = "#cac8b8";
 
-
 class ArmCanvas {
 
-    getAngle(ix) { return Math.round(this._angles[ix] * rad2deg); }
-    setAngle(ix, degrees) {
-        this._angles[ix] = degrees * deg2rad;
-        this._valid = false;
+    addArm(arm) {
+        this._arms.push(arm);
+        arm._setParent(this);
     }
 
-    getLength(ix) { return this._lengths[ix]; }
-    setLength(ix, len) {
-        this._lengths[ix] = len;
-        this._valid = false;
-    }
-
-    changeAngle(ix, dval) {
-        this._angles[ix] += dval;
-        this._valid = false;
-    }
-
-    constructor(canvas, ballmove_callback, num_segments) {
-        // **** First some setup! ****
+    constructor(canvas, ballmove_callback) {
 
         this.canvas = canvas;
         this.width = canvas.width;
@@ -35,25 +21,43 @@ class ArmCanvas {
 
         this.ballmove_callback = ballmove_callback;
 
-        this.num_segments = num_segments;
-
-        this.sf = 12; // Scaling from 'units' to pixels.
-
-        this.targetR = 10;
-
-        // Graphical offsets
-        this.offX = 200;
-        this.offY = -50;
+        this._arms = [];
 
         this.targetX = 10;
         this.targetY = 10;
+        // target radius
+        this.targetR = 10;
 
-        // Create default angles/ lengths (0.999 as a lazy to avoid divide by 0 when one link)
-        var stAng = 80; var incAng = ((-60) - stAng) / (num_segments-1);
-        this._angles  = Array.from({length: num_segments}, (v, k) => (stAng + (incAng*k || 0)) * deg2rad); 
+        this.sf = 12; // Scaling from 'units' to pixels.
 
-        var stLen = 20/num_segments; var incLen = (15/num_segments - stLen) / (num_segments-1);
-        this._lengths = Array.from({length: num_segments}, (v, k) => stLen + (k*incLen || 0)); 
+        // moving the ball!
+        var self = this;
+        var isClicked = false;
+
+        canvas.addEventListener('mousedown', function(e) {
+            isClicked = true;
+        }, true);
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (isClicked) {
+                var mouse = self.getMouse(e);
+
+                // self.targetX = (mouse.x               - self.offX) / self.sf;
+                // self.targetY = (self.height - mouse.y + self.offY) / self.sf;
+                self.targetX = (mouse.x              ) / self.sf;
+                self.targetY = (self.height - mouse.y) / self.sf;
+
+                // Update the graph/ whatever else should the ball move.
+                ballmove_callback();
+
+                self._valid = false;
+            }
+        }, true);
+
+        canvas.addEventListener('mouseup', function(e) {
+            isClicked = false;
+        }, true);
+
 
         // This complicates things a little but but fixes mouse co-ordinate problems
         // when there's a border or padding. See getMouse for more detail
@@ -70,36 +74,136 @@ class ArmCanvas {
         this.htmlTop = html.offsetTop;
         this.htmlLeft = html.offsetLeft;
 
-        // Since we still want to use this particular CanvasState in the events we have to save a reference to it.
-        // This is our reference!
-        var myState = this;
+        setInterval(function() { self.draw(); }, self.interval);
+    }
 
-        var isClicked = false;
+    draw() {
 
-        canvas.addEventListener('mousedown', function(e) {
-            isClicked = true;
-        }, true);
+        // if our state is invalid, redraw and validate!
+        if (!this._valid) {
+            this._valid = true;
 
-        canvas.addEventListener('mousemove', function(e) {
-            if (isClicked) {
-                var mouse = myState.getMouse(e);
+            var ctx = this.ctx;
 
-                myState.targetX = (mouse.x                  - myState.offX) / myState.sf;
-                myState.targetY = (myState.height - mouse.y + myState.offY) / myState.sf;
+            // Colour background!
+            ctx.fillStyle = background_colour;
+            ctx.fillRect(0, 0, this.width, this.height);
 
-                // Update the graph/ whatever else should the ball move.
-                ballmove_callback();
+            // Draw grid!
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = light_line_colour;
 
-                myState._valid = false;
+            // First lines are here.
+            // var ox = this.offX % this.sf - this.sf;
+            // var oy = this.offY % this.sf;
+            // Ensure grid is evenly spaced on the surface.
+            var ox = (this.width/2) % this.sf - this.sf;
+            var oy = (this.height/2) % this.sf - this.sf;
+
+            while (ox < this.width) {
+                ox += this.sf;
+
+                ctx.moveTo(ox, 0);
+                ctx.lineTo(ox, this.height);
             }
-        }, true);
+            while (oy < this.height) {
+                oy += this.sf;
 
-        canvas.addEventListener('mouseup', function(e) {
-            isClicked = false;
-        }, true);
+                ctx.moveTo(0,          oy);
+                ctx.lineTo(this.width, oy);
+            }
 
-        // **** Options! ****
-        setInterval(function() { myState.draw(); }, myState.interval);
+            ctx.stroke();
+
+            // Draw ball
+            ctx.beginPath();
+            ctx.arc(this.targetX * this.sf,
+                    this.height - this.targetY*this.sf, this.targetR, 0, 2 * Math.PI, false);
+            ctx.fillStyle = ball_colour;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = ball_stroke_colour;
+            ctx.stroke();
+
+            this._arms.forEach(function(a) {
+                a.draw(ctx);
+            });
+        }
+    }
+
+    // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
+    // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
+    // ArmCanvas.prototype.getMouse = function(e) {
+    getMouse(e) {
+        var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
+
+        // Compute the total offset
+        if (element.offsetParent !== undefined) {
+            do {
+                offsetX += element.offsetLeft;
+                offsetY += element.offsetTop;
+            } while ((element = element.offsetParent));
+        }
+
+        // Add padding and border style widths to offset
+        // Also add the <html> offsets in case there's a position:fixed bar
+        offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
+        offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
+
+        mx = e.pageX - offsetX;
+        my = e.pageY - offsetY;
+
+        // We return a simple javascript object (a hash) with x and y defined
+        return {x: mx, y: my};
+    }
+}
+
+class Arm {
+
+    getAngle(ix) { return Math.round(this._angles[ix] * rad2deg); }
+    setAngle(ix, degrees) {
+        this._angles[ix] = degrees * deg2rad;
+        this.armCanvas._valid = false;
+    }
+
+    getLength(ix) { return this._lengths[ix]; }
+    setLength(ix, len) {
+        this._lengths[ix] = len;
+        this.armCanvas._valid = false;
+    }
+
+    changeAngle(ix, dval) {
+        this._angles[ix] += dval;
+        this.armCanvas._valid = false;
+    }
+
+    _setParent(armCanvas) {
+        this.armCanvas = armCanvas;
+        // Should probably pull these upon render but eh.
+        this.height = armCanvas.height;
+        this.width  = armCanvas.width;
+        this.sf     = armCanvas.sf;
+    }
+
+    getTargetX() { return this.armCanvas.targetX - this.offX/this.sf; }
+    getTargetY() { return this.armCanvas.targetY + this.offY/this.sf; }
+
+    constructor(num_segments, x=200, y=-50) {
+        // **** First some setup! ****
+        this.num_segments = num_segments;
+
+        // Graphical offsets
+        this.offX = x;
+        this.offY = y;
+
+        // Create default angles/ lengths (0.999 as a lazy to avoid divide by 0 when one link)
+        var stAng = 80; var incAng = ((-60) - stAng) / (num_segments-1);
+        this._angles  = Array.from({length: num_segments}, (v, k) => (stAng + (incAng*k || 0)) * deg2rad); 
+
+        var stLen = 20/num_segments; var incLen = (15/num_segments - stLen) / (num_segments-1);
+        this._lengths = Array.from({length: num_segments}, (v, k) => stLen + (k*incLen || 0)); 
+
     }
 
     // Return tuples of (x, y) at the end of each limb.
@@ -126,7 +230,7 @@ class ArmCanvas {
     }
 
     getCurrentError() {
-        return this.getError(this._angles, this._lengths, this.targetX, this.targetY);
+        return this.getError(this._angles, this._lengths, this.getTargetX(), this.getTargetY());
     }
     getError(angles, lengths, tx, ty) {
         var poss = this.calculatePositions(angles, lengths);
@@ -134,7 +238,7 @@ class ArmCanvas {
     }
 
     calculateCurrentGradients() {
-        return this.calculateGradients(this._angles, this._lengths, this.targetX, this.targetY);
+        return this.calculateGradients(this._angles, this._lengths, this.getTargetX(), this.getTargetY());
     }
     calculateGradients(angles, lengths, tx, ty) {
         // Evaluating error of regular function. Not derived.
@@ -150,7 +254,7 @@ class ArmCanvas {
     }
 
     calculateCurrentGradientsSq() {
-        return this.calculateGradientSquared(this._angles, this._lengths, this.targetX, this.targetY);
+        return this.calculateGradientSquared(this._angles, this._lengths, this.getTargetX(), this.getTargetY());
     }
     calculateGradientSquared(angles, lengths, tx, ty) {
         var grads = [];
@@ -220,98 +324,27 @@ class ArmCanvas {
 
     // While draw is called as often as the INTERVAL variable demands,
     // It only ever does something if the canvas gets invalidated by our code
-    draw() {
-        // if our state is invalid, redraw and validate!
-        if (!this._valid) {
-            this._valid = true;
+    draw(ctx) {
+        // Draw arm
+        ctx.beginPath();
 
-            var ctx = this.ctx;
+        // Base
+        var w = 30;
+        ctx.moveTo(this.offX - w, this.offY + this.height);
+        ctx.lineTo(this.offX + w, this.offY + this.height);
 
-            // Colour background!
-            ctx.fillStyle = background_colour;
-            ctx.fillRect(0, 0, this.width, this.height);
+        // Arm
+        ctx.lineWidth = 7;
+        ctx.strokeStyle = arm_colour;
+        ctx.moveTo(this.offX, this.offY + this.height);
 
-            // Draw grid!
-            ctx.beginPath();
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = light_line_colour;
+        self = this;
+        this.calculatePositions(this._angles, this._lengths).forEach(function(pos) {
+            ctx.lineTo(self.offX + pos[0]*self.sf,
+                        self.offY + self.height - pos[1]*self.sf);
+        })
 
-            // First lines are here.
-            var ox = this.offX % this.sf - this.sf;
-            var oy = this.offY % this.sf;
-
-            while (ox < this.width) {
-                ox += this.sf;
-
-                ctx.moveTo(ox, 0);
-                ctx.lineTo(ox, this.height);
-            }
-            while (oy < this.height) {
-                oy += this.sf;
-
-                ctx.moveTo(0,          oy);
-                ctx.lineTo(this.width, oy);
-            }
-
-            ctx.stroke();
-
-            // Draw ball
-            ctx.beginPath();
-            ctx.arc(this.offX + this.targetX * this.sf,
-                    this.offY + this.height - this.targetY*this.sf, this.targetR, 0, 2 * Math.PI, false);
-            ctx.fillStyle = ball_colour;
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = ball_stroke_colour;
-            ctx.stroke();
-
-            // Draw arm
-            ctx.beginPath();
-
-            // Base
-            var w = 30;
-            ctx.moveTo(this.offX - w, this.offY + this.height);
-            ctx.lineTo(this.offX + w, this.offY + this.height);
-
-
-            // Arm
-            ctx.lineWidth = 7;
-            ctx.strokeStyle = arm_colour;
-            ctx.moveTo(this.offX, this.offY + this.height);
-
-            self = this;
-            this.calculatePositions(this._angles, this._lengths).forEach(function(pos) {
-                ctx.lineTo(self.offX + pos[0]*self.sf,
-                           self.offY + self.height - pos[1]*self.sf);
-            })
-
-            ctx.stroke();
-        }
-    }
-
-    // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
-    // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
-    // ArmCanvas.prototype.getMouse = function(e) {
-    getMouse(e) {
-        var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
-
-        // Compute the total offset
-        if (element.offsetParent !== undefined) {
-            do {
-                offsetX += element.offsetLeft;
-                offsetY += element.offsetTop;
-            } while ((element = element.offsetParent));
-        }
-
-        // Add padding and border style widths to offset
-        // Also add the <html> offsets in case there's a position:fixed bar
-        offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
-        offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
-
-        mx = e.pageX - offsetX;
-        my = e.pageY - offsetY;
-
-        // We return a simple javascript object (a hash) with x and y defined
-        return {x: mx, y: my};
+        ctx.stroke();
+        // }
     }
 }

@@ -9,20 +9,23 @@ class TwoLinkArmAndGraph {
                               self.arm.getAngle(1),
                               self.arm.getLength(0),
                               self.arm.getLength(1),
-                              self.arm.targetX,
-                              self.arm.targetY);
+                              self.arm.getTargetX(),
+                              self.arm.getTargetY());
         }
 
         // Create an arm in that space
-        var arm = new ArmCanvas(document.getElementById('canvas'), UpdateGraph, 2);
+        var armC = new ArmCanvas(document.getElementById('canvas'), UpdateGraph);
+        var arm = new Arm(2);
+        armC.addArm(arm);
+
         this.arm = arm;
         this.graph = new DistanceGraph(document.getElementById('mygraph'),
                                        arm.getAngle(0),
                                        arm.getAngle(1),
                                        arm.getLength(0),
                                        arm.getLength(1),
-                                       arm.targetX,
-                                       arm.targetY);
+                                       arm.getTargetX(),
+                                       arm.getTargetY());
 
         // slider
         $("#ang1").slider({
