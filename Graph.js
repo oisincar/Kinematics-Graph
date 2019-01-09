@@ -61,9 +61,7 @@ class DistanceGraph {
         var x2 = x1 + l2 * Math.cos(a + b);
         var y2 = y1 + l2 * Math.sin(a + b);
 
-        // dist to target
-        return Math.sqrt((tx - x2) * (tx - x2) +
-                         (ty - y2) * (ty - y2));
+        return dist(tx,ty, x2,y2);
     }
 
     update(a1, a2, l1, l2, tx, ty) {
@@ -82,6 +80,7 @@ class DistanceGraph {
                 var ax = i/steps * 360 - 180 + a1,
                     ay = j/steps * 360 - 180 + a2;
                 var value = this.distToTarget(ax, ay, l1, l2, tx, ty);
+
                 data.add({
                     x: ax,
                     y: ay,

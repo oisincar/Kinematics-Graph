@@ -3,15 +3,12 @@ class GradientDescentLongChain {
     constructor() {
         var self = this;
 
-        // Target moved, update target position.
-        function UpdateFollow() {
-            self.targetX = self.arm.targetX;
-            self.targetY = self.arm.targetY;
+        this.arm = new ArmCanvas(
+            document.getElementById('multilink_arm_canvas'),
+            function(){self.finished = false;},
+            20);
+        this.arm.sf *= 2;
 
-            self.finished = false;
-        }
-
-        this.arm = new ArmCanvas(document.getElementById('multilink_arm_canvas'), UpdateFollow, 5);
 
         this.targetX = this.arm.targetX;
         this.targetY = this.arm.targetY;
@@ -25,13 +22,18 @@ class GradientDescentLongChain {
     // Bring 
     update() {
         // Only do stuff if we're not already at the target.
-        if (!self.finished) {
+        if (!this.finished) {
+            var grads = this.arm.calculateCurrentGradients();
 
-            // Calculate gradient
-            // console.log(this.arm._lengths);
+            // Update arm angles!
+            for (var i = 0; i < grads.length; i++) {
+                this.arm.changeAngle(i, -grads[i]*0.001);
+            }
 
-
-
+            // If we're now close enough, don't update til we have to again.
+            if (this.arm.getCurrentError() < 0.5) {
+                this.finished = true;
+            }
         }
     }
 

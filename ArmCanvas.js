@@ -19,6 +19,11 @@ class ArmCanvas {
         this._valid = false;
     }
 
+    changeAngle(ix, dval) {
+        this._angles[ix] += dval;
+        this._valid = false;
+    }
+
     constructor(canvas, ballmove_callback, num_segments) {
         // **** First some setup! ****
 
@@ -42,12 +47,13 @@ class ArmCanvas {
         this.targetX = 10;
         this.targetY = 10;
 
-        // Create default angles/ lengths
+        // Create default angles/ lengths (0.999 as a lazy to avoid divide by 0 when one link)
         var stAng = 80; var incAng = ((-60) - stAng) / (num_segments-1);
-        this._angles  = Array.from({length: num_segments}, (v, k) => (stAng + incAng*k) * deg2rad); 
+        this._angles  = Array.from({length: num_segments}, (v, k) => (stAng + (incAng*k || 0)) * deg2rad); 
 
         var stLen = 20/num_segments; var incLen = (15/num_segments - stLen) / (num_segments-1);
-        this._lengths = Array.from({length: num_segments}, (v, k) => stLen + incLen*k); 
+        console.log("huehuhehuaeotuha", incLen);
+        this._lengths = Array.from({length: num_segments}, (v, k) => stLen + (k*incLen || 0)); 
 
         // This complicates things a little but but fixes mouse co-ordinate problems
         // when there's a border or padding. See getMouse for more detail
@@ -97,7 +103,6 @@ class ArmCanvas {
         setInterval(function() { myState.draw(); }, myState.interval);
     }
 
-
     // Return tuples of (x, y) at the end of each limb.
     calculatePositions(angles, lengths) {
         // Arm
@@ -109,11 +114,11 @@ class ArmCanvas {
 
         // Calculating end positions for each segment of the arm, and drawing to there.
         for (var i = 0; i < this.num_segments; i++) {
-            var l = lengths[i],
+            var l = lengths[i];
 
-            curA = curA + angles[i],
-            curX = curX + l * Math.cos(curA),
-            curY = curY + l * Math.sin(curA);
+            curA += angles[i];
+            curX += l * Math.cos(curA);
+            curY += l * Math.sin(curA);
 
             res.push([curX, curY]);
         }
@@ -121,14 +126,60 @@ class ArmCanvas {
         return res;
     }
 
-    calculateGradients(angles, lengths) {
+    getCurrentError() {
+        return this.getError(this._angles, this._lengths, this.targetX, this.targetY);
+    }
+    getError(angles, lengths, tx, ty) {
+        var poss = this.calculatePositions(angles, lengths);
+        return dist(poss[angles.length-1][0], poss[angles.length-1][1], tx, ty);
+    }
 
-        // curX = l0*cos(a0) + l1*cos(a0+a1) + l2*cos(a0+a1+a2)...
-        // curY = l0*sin(a0) + l1*sin(a0+a1) + l2*sin(a0+a1+a2)...
-        // err = (curX - tX)^2 + (curY - tY)^2
-        // d/da (x*cos(a) + y*cos(a + b) + z*cos(a + b + c) + w*cos(a+b+c+d) - i)^2 + (x*sin(a) + y*sin(a+b) + z*sin(a+b+c) +w*sin(a+b+c+d)- j)^2
-        // 
+    calculateCurrentGradients() {
+        return this.calculateGradients(this._angles, this._lengths, this.targetX, this.targetY);
+    }
+    calculateGradients(angles, lengths, tx, ty) {
+
+        var grads = [];
+        var as = angles.slice();
+        var ls = lengths.slice();
+
+        // Effective base of the arm. As we consider subsets of the arm,
+        // Use this to calculate the offsets.
+        // Evaluating error of regular function. Not derived.
+        // This is the same for all sub-arms.
+        var err = this.getError(angles, lengths, tx, ty);
+
+        for (var i = 0; i < angles.length; i++) {
+
+            var g = this.calculateGradSquared(as, ls, tx, ty);
+
+            // Chain rule... Kinda. With square root -> 1/sqrt -> this.
+            grads.push(g/(2*err));
+
+            // Update 'base' position of arm, by moving target closer.
+            // We can consider the arm as if it was one link shorter, ignoring previous angles.
+            tx -= ls[0]*Math.cos(as[0]);
+            ty -= ls[0]*Math.sin(as[0]);
+
+            // Add previous (sum of) angles to the first one. Previous rotation adds here.
+            if (as.length >= 1)
+                as[1] += as[0];
+
+            // Drop first element.
+            as.shift();
+            ls.shift();
+
+        }
         
+        return grads;
+    }
+
+    // Returns the derivitive of the squared error.
+    calculateGradSquared(angles, lengths, tx, ty) {
+        var sumGradX = 0;
+        var sumGradY = 0;
+        var sumA = 0;
+
         // d/da = 
         //    +2i * ( w sin(a + b + c + d)
         //          + z sin(a + b + c)
@@ -138,6 +189,31 @@ class ArmCanvas {
         //          + z cos(a + b + c)
         //          + y cos(a + b)
         //          + x cos(a))
+
+        // For debugging, write the equation we have.
+        // var eqGradX = "";
+        // var eqGradY = "";
+        // var asStr = "";
+
+        for (var i = 0; i < angles.length; i++) {
+            sumA    += angles[i];
+            sumGradX += lengths[i] * Math.sin(sumA); // sin/cos flipped here cause it's the derivitive.
+            sumGradY += lengths[i] * Math.cos(sumA);
+
+            // asStr   += " + a" + i;
+            // eqGradX += " + l" + i + "*sin(" + asStr + ")";
+            // eqGradY += " + l" + i + "*cos(" + asStr + ")";
+        }
+
+        // Times it by tx, ty.
+        var g = tx * 2 * sumGradX
+               -ty * 2 * sumGradY;
+
+        // var eq = "2i * (" + eqGradX + ") " +
+        //         "-2j * (" + eqGradY + ")";
+
+        // console.log(eq, g);
+        return g;
     }
 
     // While draw is called as often as the INTERVAL variable demands,
