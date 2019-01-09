@@ -5,6 +5,7 @@ var ball_colour = "#ef6461";
 var ball_stroke_colour = "#ef6461";
 var light_line_colour = "#cac8b8";
 
+
 class ArmCanvas {
 
     getAngle(ix) { return Math.round(this._angles[ix] * rad2deg); }
@@ -52,12 +53,10 @@ class ArmCanvas {
         this._angles  = Array.from({length: num_segments}, (v, k) => (stAng + (incAng*k || 0)) * deg2rad); 
 
         var stLen = 20/num_segments; var incLen = (15/num_segments - stLen) / (num_segments-1);
-        console.log("huehuhehuaeotuha", incLen);
         this._lengths = Array.from({length: num_segments}, (v, k) => stLen + (k*incLen || 0)); 
 
         // This complicates things a little but but fixes mouse co-ordinate problems
         // when there's a border or padding. See getMouse for more detail
-        var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
         if (document.defaultView && document.defaultView.getComputedStyle) {
             this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)      || 0;
             this.stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)       || 0;
@@ -138,23 +137,28 @@ class ArmCanvas {
         return this.calculateGradients(this._angles, this._lengths, this.targetX, this.targetY);
     }
     calculateGradients(angles, lengths, tx, ty) {
+        // Evaluating error of regular function. Not derived.
+        // This is the same for all sub-arms.
+        var err = this.getError(angles, lengths, tx, ty);
+        var grads = this.calculateGradientSquared(angles, lengths, tx, ty);
 
+        // Chain rule... Kinda. With square root -> 1/sqrt -> this (/2/err).
+        for (var i = 0; i < grads.length; i++)
+            grads[i] /= 2*err;
+
+        return grads;
+    }
+
+    calculateCurrentGradientsSq() {
+        return this.calculateGradientSquared(this._angles, this._lengths, this.targetX, this.targetY);
+    }
+    calculateGradientSquared(angles, lengths, tx, ty) {
         var grads = [];
         var as = angles.slice();
         var ls = lengths.slice();
 
-        // Effective base of the arm. As we consider subsets of the arm,
-        // Use this to calculate the offsets.
-        // Evaluating error of regular function. Not derived.
-        // This is the same for all sub-arms.
-        var err = this.getError(angles, lengths, tx, ty);
-
         for (var i = 0; i < angles.length; i++) {
-
-            var g = this.calculateGradSquared(as, ls, tx, ty);
-
-            // Chain rule... Kinda. With square root -> 1/sqrt -> this.
-            grads.push(g/(2*err));
+            grads.push(this.calculateGradSquared(as, ls, tx, ty));
 
             // Update 'base' position of arm, by moving target closer.
             // We can consider the arm as if it was one link shorter, ignoring previous angles.
@@ -168,7 +172,6 @@ class ArmCanvas {
             // Drop first element.
             as.shift();
             ls.shift();
-
         }
         
         return grads;
@@ -212,7 +215,6 @@ class ArmCanvas {
         // var eq = "2i * (" + eqGradX + ") " +
         //         "-2j * (" + eqGradY + ")";
 
-        // console.log(eq, g);
         return g;
     }
 
